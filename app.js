@@ -10,7 +10,6 @@ const passportLocalMongoose = require("passport-local-mongoose");
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const findOrCreate = require('mongoose-findorcreate');
 
-
 const app = express();
 
 app.set("view engine", "ejs");
@@ -18,7 +17,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
 
 app.use(session({
-    secret: "Only Rupesh Knows this secret.",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false
 }))
@@ -80,14 +79,18 @@ app.get("/login", function(req, res) {
 })
 
 app.get("/Secrets", function(req, res) {
-    User.find(
-        {secret: {$ne: null}},
-        function(err, users) {
-            if (!err) {
-                res.render("secrets", {usersWithSecret: users});
+    if(req.isAuthenticated()) {
+        User.find(
+            {secret: {$ne: null}},
+            function(err, users) {
+                if (!err) {
+                    res.render("secrets", {usersWithSecret: users});
+                }
             }
-        }
-    )
+        )
+    } else {
+        res.redirect("/login");
+    }
 })
 
 app.get("/logout", function(req, res) {
